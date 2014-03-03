@@ -2,8 +2,8 @@ import math
 
 class Node:
 	def __init__(self, data=None):
-		self.next = None
-		self.skip = None
+		self.next = None	# next node
+		self.skip = None	# the target node of the skip pointer (if has)
 		self.data = int(data)
 	
 	def appendNode(self, node):
@@ -12,6 +12,7 @@ class Node:
 	def hasNext(self):
 		return self.next != None
 
+	# if the node has a skip pointer
 	def hasSkip(self):
 		return self.skip != None
 
@@ -22,12 +23,14 @@ class SkipList:
 	def __init__(self, array=None):
 		
 		self.length = 0
+		self.skip = False
 
 		if array == None:
-			self.head = None
-			self.tail = None
+			self.head = None	# first node in the list	
+			self.tail = None	# last node in the list
 
 		else:
+			array.sort()
 			for i in array:
 				node = Node(i)
 				self.append(node)
@@ -36,6 +39,12 @@ class SkipList:
 	def __len__(self):
 		return self.length
 
+	# if skip pointers are created for this list
+	def isSkipped(self):
+		return self.skip
+
+
+	# get a specific node according to its index
 	def getNode(self, index):
 		current = self.head
 		while index > 0 :
@@ -43,7 +52,7 @@ class SkipList:
 			index = index - 1
 		return current
 
-
+	# append a node after the last node of the list
 	def append(self, node):
 		if len(self) == 0:
 			self.head = node
@@ -54,27 +63,44 @@ class SkipList:
 
 		self.length = self.length + 1
 
+	# calculate the skip distance of the list
 	def skipDistance(self):
 		listLength = len(self)
 		skipDis = math.floor(math.sqrt(listLength))
 		return skipDis
 
-	def connect(self, current, target):
-		currentNode = self.getNode(current)
-		targetNode = self.getNode(target)
+	# connect two nodes by adding skip pointers from current node to target node. input: index! not node!
+	def connect(self, currentIndex, targetIndex):
+		currentNode = self.getNode(currentIndex)
+		targetNode = self.getNode(targetIndex)
 		currentNode.skip = targetNode
 
+	# create skip pointes for the entire list
 	def buildSkips(self):
-		distance = self.skipDistance()
-		current = 0
-		target = 0 + distance
-		while target < self.length:
-			self.connect(current, target)
-			current = target
-			target = target + distance
+		if self.isSkipped():
+			self.clearSkips()
+		else:
+			distance = self.skipDistance()
+			current = 0
+			target = 0 + distance
+			while target < self.length:
+				self.connect(current, target)
+				current = target
+				target = target + distance
+			self.skip = True
 
+	# clear skip pointers for the entire list
+	def clearSkips(self):
+		if self.skip == True:
+			current = self.head
+			while current.hasNext():
+				if current.hasSkip():
+					current.skip = None
+				current = current.next
+			self.skip = False
+
+	# return two arrays. one with all nodes, another with skip pointers
 	def display(self):
-		
 		first = []
 		second = []
 		current = self.head
@@ -85,7 +111,3 @@ class SkipList:
 			current = current.next
 		first.append(self.tail.data)
 		return { "all_nodes": first, "skips": second }
-
-
-
-
