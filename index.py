@@ -16,8 +16,8 @@ def index():
 		filenames.extend(files)
 	
 	for filename in filenames:
-		words = tokenizeFiles(filename)
-		tokens = stemmingWords(words)
+		words = tokenize_files(filename)
+		tokens = stemming_words(words)
 		for t in tokens:
 			key = str(t)
 			if key in masterDict:
@@ -33,18 +33,18 @@ def index():
 
 
 
-def tokenizeFiles(filename):
+def tokenize_files(filename):
 	fileDir = PATH + filename
 	f = open(fileDir, 'r')
 	fileString = f.read().lower()
-	
+
 	sentences = sent_tokenize(fileString)
 	words = []
 	for s in sentences:
 		words = words + word_tokenize(s)
 	return words
 
-def stemmingWords(words):
+def stemming_words(words):
 	stemmer = PorterStemmer()
 	tokens = []
 	for w in words:

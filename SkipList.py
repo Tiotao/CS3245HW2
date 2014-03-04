@@ -6,14 +6,14 @@ class Node:
 		self.skip = None	# the target node of the skip pointer (if has)
 		self.data = int(data)
 	
-	def appendNode(self, node):
+	def append_node(self, node):
 		self.next = node
 
-	def hasNext(self):
+	def has_next(self):
 		return self.next != None
 
 	# if the node has a skip pointer
-	def hasSkip(self):
+	def has_skip(self):
 		return self.skip != None
 
 	def __repr__(self):
@@ -40,12 +40,12 @@ class SkipList:
 		return self.length
 
 	# if skip pointers are created for this list
-	def isSkipped(self):
+	def is_skipped(self):
 		return self.skip
 
 
 	# get a specific node according to its index
-	def getNode(self, index):
+	def get_node(self, index):
 		current = self.head
 		while index > 0 :
 			current = current.next
@@ -58,29 +58,29 @@ class SkipList:
 			self.head = node
 			self.tail = node
 		else:
-			self.tail.appendNode(node)
+			self.tail.append_node(node)
 			self.tail = node
 
 		self.length = self.length + 1
 
 	# calculate the skip distance of the list
-	def skipDistance(self):
+	def skip_distance(self):
 		listLength = len(self)
 		skipDis = math.floor(math.sqrt(listLength))
 		return skipDis
 
 	# connect two nodes by adding skip pointers from current node to target node. input: index! not node!
 	def connect(self, currentIndex, targetIndex):
-		currentNode = self.getNode(currentIndex)
-		targetNode = self.getNode(targetIndex)
-		currentNode.skip = targetNode
+		currentNode = self.get_node(currentIndex)
+		targetNode = self.get_node(targetIndex)
+		currentNode.skip = target_node
 
 	# create skip pointes for the entire list
-	def buildSkips(self):
-		if self.isSkipped():
+	def build_skips(self):
+		if self.is_skipped():
 			self.clearSkips()
 		else:
-			distance = self.skipDistance()
+			distance = self.skip_distance()
 			current = 0
 			target = 0 + distance
 			while target < self.length:
@@ -90,11 +90,11 @@ class SkipList:
 			self.skip = True
 
 	# clear skip pointers for the entire list
-	def clearSkips(self):
+	def clear_skips(self):
 		if self.skip == True:
 			current = self.head
-			while current.hasNext():
-				if current.hasSkip():
+			while current.has_next():
+				if current.has_skip():
 					current.skip = None
 				current = current.next
 			self.skip = False
@@ -104,8 +104,8 @@ class SkipList:
 		first = []
 		second = []
 		current = self.head
-		while current.hasNext():
-			if current.hasSkip():
+		while current.has_next():
+			if current.has_skip():
 				second.append((current.data, current.skip.data))
 			first.append(current.data)
 			current = current.next
