@@ -29,6 +29,7 @@ def index():
 	f = open(DICT_DIR, 'w')
 	f.write(str(masterDict))
 	print 'index finished'
+	f.close()
 
 
 
@@ -37,6 +38,7 @@ def tokenize_files(filename):
 	fileDir = PATH + filename
 	f = open(fileDir, 'r')
 	fileString = f.read().lower()
+	f.close()
 
 	sentences = sent_tokenize(fileString)
 	words = []
