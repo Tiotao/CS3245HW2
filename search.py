@@ -1,5 +1,6 @@
 from nltk.tokenize import word_tokenize, sent_tokenize
 from nltk.stem.porter import *
+import re, random
 
 PATH = "D:\\training\\"
 DICT_DIR = 'D:\\dictionary.txt'
@@ -10,7 +11,15 @@ OUT_DIR = 'D:\\output.txt'
 from config import *
 # TODO: use args
 
-def read_query():
+
+def search():
+	queries = read_queries()
+	result = []
+	for query in queries:
+		result.append(process(query))
+	output(result)
+
+def read_queries():
 	query_file = file(QUERY_DIR, 'r')
 	queries = []
 	for line in query_file:
@@ -18,61 +27,140 @@ def read_query():
 
 	query_file.close()
 
-	out_file = file(OUT_DIR, 'w')
-	for query in queries:
-		out_file.write(str(query) + '\n')
+	return queries
 
-	out_file.close()
 
 def parse_query(raw):
 	operators = ('AND', 'OR', 'NOT', '(', ')')
-	parsed = []
+	operators_re = '(AND|OR|NOT|\(|\))'
 
-	# the following steps split the input string into list of operators and operands
-	raw_atoms = raw.split()
+	# split the words from operators
+	raw_atoms = re.split(operators_re, raw)
 	atoms = []
-
-	# some special treatment for ( and ) without surrounding spaces on one side
 	for atom in raw_atoms:
-		if atom[0] == '(':
-			atoms.append('(')
-			atom = atom[1:]
-		if atom[-1] == ')':
-			atoms.append(atom[:-1])
-			atoms.append(')')
-		else:
-			atoms.append(atom)
-
-	# buffer, which is a reserved word...
-	buff = []
-	for atom in atoms:
-		# we've found an operator, everything accumulated in buffer are joined by 'AND' in ()
 		if atom in operators:
-			if len(buff) > 2:
-				parsed.append('(')
-				# Do not add the last 'AND'
-				parsed.extend(buff[:-1])
-				parsed.append(')')
-			else:
-				parsed.extend(buff[:-1])
-			parsed.append(atom)
+			atoms.append(atom)
+		else:
+			# tokenize input
+			words = word_tokenize(atom)
+			if len(words) > 1:
+				atoms.append('(')
+				for i in range(len(words) - 1):
+					atoms.append(normalise_word(words[i]))
+					atoms.append('AND')
+				atoms.append(normalise_word(words[-1]))
+				atoms.append(')')
+			elif len(words) == 1:
+				atoms.extend(words)
+	return atoms
+
+def output(result):
+	out_file = file(OUT_DIR, 'w')
+	for line in result:
+		out_file.write(' '.join(map(str, line)) + '\n')
+
+	out_file.close()
+
+# process all AND queries into nested arrays,
+# so A OR B AND C OR D becomes [A, [B, C], D]
+def fold(query):
+	result = []
+	buff = []
+	for atom in query:
+		if atom == 'AND':
+			continue
+		elif atom == 'OR':
+			result.append(buff)
 			buff = []
 		else:
-			buff.append(stemming_word(atom))
-			buff.append('AND')
+			buff.append(atom)
+	result.append(buff)
+	return result
 
-	# add the remaining buffer content
-	if len(buff) > 2:
-		parsed.append('(')
-		# Do not add the last 'AND'
-		parsed.extend(buff[:-1])
-		parsed.append(')')
+def process(query):
+	query = fold(query)
+	ORs = []
+	for ANDs in query:
+		if len(ANDs) == 1:
+			ORs.append(lookup(ANDs[0]))
+		else:
+			res = reduce(intersect, ANDs, master)
+			ORs.append(res)
+
+	
+	result = reduce(union, ORs, [])
+
+	return result
+
+master = range(100)
+
+def union(l1, l2):
+	if type(l1) is not list:
+		l1 = lookup(l1)
+	if type(l2) is not list:
+		l2 = lookup(l2)
+	i = 0;
+	j = 0;
+	result = []
+
+	while i < len(l1) and j < len(l2):
+		if l1[i] == l2[j]:
+			result.append(l1[i])
+			i += 1
+			j += 1
+		elif l1[i] < l2[j]:
+			result.append(l1[i])
+			i += 1
+		else:
+			result.append(l2[j])
+			j += 1
+
+	# add remaining, one of the following is actually empty
+	result += l1[i:]
+	result += l2[j:]
+	return result
+
+def intersect(l1, l2):
+	if type(l1) is not list:
+		l1 = lookup(l1)
+	if type(l2) is not list:
+		l2 = lookup(l2)
+
+	i = 0;
+	j = 0;
+	result = []
+
+	while i < len(l1) and j < len(l2):
+		if l1[i] == l2[j]:
+			result.append(l1[i])
+			i += 1
+			j += 1
+		elif l1[i] < l2[j]:
+			i += 1
+		else:
+			j += 1
+
+	return result
+
+dict = {
+	'A' : [1, 2, 3, 4, 5],
+	'B' : [4, 5, 6, 7, 8],
+	'C' : [5, 6, 7, 8, 9],
+	'D' : [8, 9]
+}
+
+# TODO: implement
+def lookup(word):
+	if word in dict:
+		return dict[word]
 	else:
-		parsed.extend(buff[:-1])
-	return parsed
+		return []
+
 
 stemmer = PorterStemmer()
-def stemming_word(word):
+
+# case folding, stemming
+def normalise_word(word):
 	return stemmer.stem(word.lower())
 
-read_query()
+search()
