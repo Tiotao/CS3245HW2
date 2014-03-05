@@ -1,6 +1,7 @@
 from nltk.tokenize import word_tokenize, sent_tokenize
 from nltk.stem.porter import *
-import re, pickle, getopt
+import re, getopt, json
+import cPickle as pickle
 from SkipList import SkipList
 from MyList import MyList
 
@@ -256,8 +257,8 @@ for line in dict_file:
 dict_file.close()
 postings_file = file(POSTING_DIR, 'r')
 # list of all docIDs
-master_postings = postings_file.readline().split()
-master_postings = map(int, master_postings)
+master_postings = postings_file.readline()
+master_postings = json.loads(master_postings)
 search()
 
 out_file.close()

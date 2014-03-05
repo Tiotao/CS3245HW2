@@ -2,9 +2,9 @@
 from nltk.tokenize import word_tokenize, sent_tokenize
 from nltk.stem.porter import *
 from os import walk, remove
-import sys
+import sys, json
 from SkipList import SkipList
-import pickle
+import cPickle as pickle
 import getopt
 
 
@@ -45,10 +45,7 @@ def generate_output(filenames, dict, dict_file, posting_file):
 
 	dict_content = ""
 	
-	all_index = ""
-	for f in filenames:
-		all_index = all_index + str(f) + " "
-	posting_header = all_index + '\n'
+	posting_header = json.dumps(filenames) + '\n'
 
 	
 	# clear files
