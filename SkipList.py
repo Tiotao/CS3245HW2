@@ -101,6 +101,15 @@ class SkipList:
 			self.skip = False
 		return self
 
+	def to_list(self):
+		result = []
+		current = self.head
+		while current.has_next():
+			result.append(current.data)
+			current = current.next
+		result.append(self.tail.data)
+		return result
+
 	# return two arrays. one with all nodes, another with skip pointers
 	def display(self):
 		first = []
