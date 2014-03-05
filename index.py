@@ -144,7 +144,7 @@ for o, a in opts:
     elif o == '-p':
         posting_file = a
     else:
-        assert False, "unhandled option"
+        pass # no-op
 if docs_dir == None or dict_file == None or posting_file == None:
     usage()
     sys.exit(2)

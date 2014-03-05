@@ -1,24 +1,16 @@
 from nltk.tokenize import word_tokenize, sent_tokenize
 from nltk.stem.porter import *
-import re, pickle
+import re, pickle, getopt
 from SkipList import SkipList
 from MyList import MyList
-
-
-PATH = "D:\\training\\"
-DICT_DIR = 'D:\\dictionary.txt'
-POSTING_DIR = 'D:\\postings.txt'
-QUERY_DIR = 'D:\\query.txt'
-OUT_DIR = 'D:\\output.txt'
-
-from config import *
-# TODO: use args
-
 
 def search():
 	queries = read_queries()
 	for query in queries:
-		result = evaluate(query)
+		try:
+			result = evaluate(query)
+		except Exception, e:
+			result = []
 		output(result)
 
 def read_queries():
@@ -224,6 +216,30 @@ stemmer = PorterStemmer()
 # case folding, stemming
 def normalise_word(word):
 	return stemmer.stem(word.lower())
+
+def usage():
+    print "usage: " + sys.argv[0] + " -d dictionary-file -p postings-file -q file-of-queries -o output-file-of-results"
+
+try:
+    opts, args = getopt.getopt(sys.argv[1:], 'd:p:q:o:')
+except getopt.GetoptError, err:
+    usage()
+    sys.exit(2)
+QUERY_DIR = DICT_DIR = POSTING_DIR = OUT_DIR = None
+for o, a in opts:
+    if o == '-q':
+        QUERY_DIR = a
+    elif o == '-o':
+    	OUT_DIR = a
+    elif o == '-d':
+        DICT_DIR = a
+    elif o == '-p':
+        POSTING_DIR = a
+    else:
+        pass # no-op
+if QUERY_DIR == None or DICT_DIR == None or POSTING_DIR == None or OUT_DIR == None:
+    usage()
+    sys.exit(2)
 
 out_file = file(OUT_DIR, 'w')
 dict_file = file(DICT_DIR, 'r')
