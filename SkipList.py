@@ -65,15 +65,15 @@ class SkipList:
 
 	# calculate the skip distance of the list
 	def skip_distance(self):
-		listLength = len(self)
-		skipDis = math.floor(math.sqrt(listLength))
+		list_length = len(self)
+		skipDis = math.floor(math.sqrt(list_length))
 		return skipDis
 
 	# connect two nodes by adding skip pointers from current node to target node. input: index! not node!
-	def connect(self, currentIndex, targetIndex):
-		currentNode = self.get_node(currentIndex)
-		targetNode = self.get_node(targetIndex)
-		currentNode.skip = target_node
+	def connect(self, current_index, target_index):
+		current_node = self.get_node(current_index)
+		target_node = self.get_node(target_index)
+		current_node.skip = target_node
 
 	# create skip pointes for the entire list
 	def build_skips(self):
@@ -88,6 +88,7 @@ class SkipList:
 				current = target
 				target = target + distance
 			self.skip = True
+		return self
 
 	# clear skip pointers for the entire list
 	def clear_skips(self):
@@ -98,6 +99,7 @@ class SkipList:
 					current.skip = None
 				current = current.next
 			self.skip = False
+		return self
 
 	# return two arrays. one with all nodes, another with skip pointers
 	def display(self):
