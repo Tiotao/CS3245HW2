@@ -14,10 +14,11 @@ from config import *
 
 def search():
 	queries = read_queries()
-	result = []
 	for query in queries:
-		result.append(process(query))
-	output(result)
+		result = (process(query))
+		output(result)
+
+
 
 def read_queries():
 	query_file = file(QUERY_DIR, 'r')
@@ -29,37 +30,57 @@ def read_queries():
 
 	return queries
 
+# operator precedence
+operators = {
+	'OR': 1,
+	'AND': 10,
+	'NOT': 100,
+	'+': 2,
+	'-':2,
+	'/':3,
+	'*':3
+}
 
 def parse_query(raw):
-	operators = ('AND', 'OR', 'NOT', '(', ')')
-	operators_re = '(AND|OR|NOT|\(|\))'
 
+	# Add surrounding whitespaces to parenthesis 
+	raw = re.sub("(\(|\))", r" \1 ", raw)
 	# split the words from operators
-	raw_atoms = re.split(operators_re, raw)
-	atoms = []
-	for atom in raw_atoms:
-		if atom in operators:
-			atoms.append(atom)
+	tokens = raw.split()
+	
+	# convert to reverse polish notation
+	# with shunting-yard algorithm
+	
+	output = []
+	stack = []
+	for token in tokens:
+		# push left parenthesis to the stack
+		if token == '(':
+			stack.append(token)
+		# if token is right parenthesis,
+		# pop stack onto output until 
+		# left parenthesis, which is ignored
+		elif token == ')':
+			while stack[-1] != '(':
+				output.append(stack.pop())
+			# throw away the left parenthesis
+			stack.pop()
+		elif token in operators:
+			while stack and stack[-1] in operators and (token != 'NOT' and operators[token] == operators[stack[-1]] or operators[token] < operators[stack[-1]]):
+				output.append(stack.pop())
+			stack.append(token)
 		else:
-			# tokenize input
-			words = word_tokenize(atom)
-			if len(words) > 1:
-				atoms.append('(')
-				for i in range(len(words) - 1):
-					atoms.append(normalise_word(words[i]))
-					atoms.append('AND')
-				atoms.append(normalise_word(words[-1]))
-				atoms.append(')')
-			elif len(words) == 1:
-				atoms.extend(words)
-	return atoms
+			output.append(token)
+
+	while stack:
+		output.append(stack.pop())
+
+	return output
+
 
 def output(result):
-	out_file = file(OUT_DIR, 'w')
-	for line in result:
-		out_file.write(' '.join(map(str, line)) + '\n')
+	out_file.write(' '.join(map(str, result)) + '\n')
 
-	out_file.close()
 
 # process all AND queries into nested arrays,
 # so A OR B AND C OR D becomes [A, [B, C], D]
@@ -78,6 +99,7 @@ def fold(query):
 	return result
 
 def process(query):
+	return query
 	query = fold(query)
 	ORs = []
 	for ANDs in query:
@@ -163,4 +185,6 @@ stemmer = PorterStemmer()
 def normalise_word(word):
 	return stemmer.stem(word.lower())
 
+out_file = file(OUT_DIR, 'w')
 search()
+out_file.close()
