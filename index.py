@@ -1,7 +1,7 @@
 
 from nltk.tokenize import word_tokenize, sent_tokenize
 from nltk.stem.porter import *
-from os import walk
+from os import walk, remove
 import sys
 from SkipList import SkipList
 import pickle
@@ -27,53 +27,60 @@ def index(docs_dir, dict_file, posting_file):
 
 	print "\nstart processing output"
 
-	output_content = generate_output_content(filenames, posting_array_dict)
-
-	print "\nstart writing"
-
-	write_output_file(output_content, dict_file, posting_file)
+	generate_output(filenames, posting_array_dict, dict_file, posting_file)
 
 	print "\nmission completed :)"
 
 
-def write_output_file(output_content, dict_file, posting_file):
-	dict_f = open(dict_file, 'w')
-	dict_f.write(str(output_content[0]))
-	dict_f.close()
-	posting_f = open(posting_file, 'w')
-	posting_f.write(str(output_content[1]))
-	posting_f.close()
+def generate_output(filenames, dict, dict_file, posting_file):
+	
+	# initialize iterations
 
-
-
-def generate_output_content(filenames, dict):
 	curr = 0
-	all_index = ""
-
-	for f in filenames:
-		all_index = all_index + str(f) + " "
-	dict_content = ""
-	posting_content = all_index + '\n'
-	start_line = 2
 	sorted_keys = sorted(dict.iterkeys())
 	total = len(sorted_keys)
+	
+
+	# initialize content for postings and dictionary
+
+	dict_content = ""
+	
+	all_index = ""
+	for f in filenames:
+		all_index = all_index + str(f) + " "
+	posting_header = all_index + '\n'
+
+	
+	# clear files
+
+	remove(posting_file)
+	remove(dict_file)
+	
+	posting_f = open(posting_file, 'ab')
+	posting_f.write(posting_header)
+	
 	for key in sorted_keys:
+
 		posting_array = dict[key]
 		skip_list = SkipList(posting_array).build_skips()
 		skip_list_pickled = pickle.dumps(skip_list)
-		skip_list_start = start_line
-		skip_list_end = start_line + skip_list_pickled.count('\n')
-		dict_line = str(key) + " " + str(len(dict[key])) + " " + str(skip_list_start) + " " + str(skip_list_end) +  "\n"
-		dict_content = dict_content + dict_line
+		skip_list_start = posting_f.tell()
+		posting_f.write(skip_list_pickled + '\n')
+		skip_list_end = posting_f.tell()
 
-		start_line = skip_list_end + 1
-		posting_content = posting_content + skip_list_pickled + '\n'
+		dict_line = "%(token)s %(length)s %(start)s %(end)s\n"%{'token':str(key), 'length':str(len(dict[key])), 'start':str(skip_list_start), 'end':str(skip_list_end)}
+		dict_content = dict_content + dict_line
 		
 		curr += 1
 		sys.stdout.write("\rprocessing: " + ("%.2f" % (100.0 * curr / total)) + '%')
 		sys.stdout.flush()
 
-	return dict_content, posting_content
+	posting_f.close()
+
+	dict_f = open(dict_file, 'wb')
+	dict_f.write(str(dict_content))
+	dict_f.close()
+
 
 def generate_posting_array_dict(filenames):
 	posting_array_dict = {}
