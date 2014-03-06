@@ -65,6 +65,10 @@ def parse_query(raw):
 	# split the words from operators
 	tokens = raw.split()
 	
+	return to_RPN(tokens)
+
+def to_RPN(tokens):
+
 	# convert to reverse polish notation
 	# with shunting-yard algorithm
 	
@@ -112,6 +116,47 @@ def parse_query(raw):
 
 	return output
 
+# estimate the size of a query 
+def estimate_query(query):
+	
+	query = to_RPN(query)
+
+	"""
+	Estimate the size of a given query written in RPN
+	"""
+	stack = []
+	for token in query:
+		# if we see an operator, we take out the required operands from the stack
+		# evaluate the result, and push it back to the stack
+		if token in operators:
+			# not enough operands
+			if len(stack) < required_operands[token]:
+				raise Exception("insufficient operands")
+			else:
+				operands = []
+				for i in range(required_operands[token]):
+					operands.append(stack.pop())
+				stack.append(estimate_op(token, operands))
+		# otherwise, we push the token, which is an operand, to the stack directly
+		else:
+			stack.append(token)
+
+	if len(stack) == 1:
+		return freq(stack[0])
+	elif len(stack) == 0:
+		return []
+	else:
+		print stack
+		raise Exception("too many operands")
+
+
+def estimate_op(operator, operands):
+	if operator == 'NOT':
+		return len(master_postings) - freq(operands[0])
+	elif operator == 'AND':
+		return min(freq(operands[0]), freq(operands[1]))
+	else:
+		return freq(operands[0]) + freq(operands[1])
 
 #######################################################################
 # Evaluation
@@ -228,7 +273,9 @@ def union(operands):
 
 # return the size of the postings for a given token
 def frequency(word):
-	if word in dictionary:
+	if type(word) is int:
+		return word
+	elif word in dictionary:
 		return dictionarry[word]['freq']
 	else:
 		return 0
