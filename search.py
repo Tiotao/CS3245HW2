@@ -5,6 +5,7 @@ import cPickle as pickle
 from SkipList import SkipList
 from MyList import MyList
 
+
 def search():
 	queries = read_queries()
 	for query in queries:
@@ -141,7 +142,9 @@ def apply_op(operator, operands):
 
 def complement(operand):
 	postings = lookup(operand).to_list()
-	return MyList([x for x in master_postings if x not in postings])
+	result =  MyList([x for x in master_postings if x not in postings])
+	del postings
+	return result
 
 def intersect(operands):
 	first = lookup(operands[0])
@@ -170,7 +173,8 @@ def intersect(operands):
 				second.skip()
 			else:
 				carry_on &= second.next()
-
+	del first
+	del second
 	return MyList(result)
 
 def union(operands):
@@ -195,6 +199,8 @@ def union(operands):
 	# add remaining, one of the following is actually empty
 	result.extend(first[i:])
 	result.extend(second[j:])
+	del first
+	del second
 	return MyList(result)
 
 def output(result):
