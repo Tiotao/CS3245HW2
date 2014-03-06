@@ -5,6 +5,9 @@ import cPickle as pickle
 from SkipList import SkipList
 from MyList import MyList
 
+#######################################################################
+# Read query - execute query - output result
+#######################################################################
 
 def search():
 	queries = read_queries()
@@ -29,6 +32,14 @@ def read_queries():
 	query_file.close()
 
 	return queries
+
+def output(result):
+	out_file.write(' '.join(map(str, result)) + '\n')
+
+
+#######################################################################
+# Parsing
+#######################################################################
 
 # operator precedence
 operators = {
@@ -102,6 +113,10 @@ def parse_query(raw):
 	return output
 
 
+#######################################################################
+# Evaluation
+#######################################################################
+
 def evaluate(query):
 	"""
 	Evaluate a given query written in RPN
@@ -139,6 +154,10 @@ def apply_op(operator, operands):
 		return intersect(operands)
 	else:
 		return union(operands)
+
+#######################################################################
+# Set operations
+#######################################################################
 
 def complement(operand):
 	postings = lookup(operand).to_list()
@@ -203,8 +222,16 @@ def union(operands):
 	del second
 	return MyList(result)
 
-def output(result):
-	out_file.write(' '.join(map(str, result)) + '\n')
+#######################################################################
+# Utilities
+#######################################################################
+
+# return the size of the postings for a given token
+def frequency(word):
+	if word in dictionary:
+		return dictionarry[word]['freq']
+	else:
+		return 0
 
 def lookup(word):
 	if type(word) is str:
@@ -217,15 +244,20 @@ def lookup(word):
 	else:
 		return word
 
-
 stemmer = PorterStemmer()
-
 # case folding, stemming
 def normalise_word(word):
 	return stemmer.stem(word.lower())
 
 def usage():
     print "usage: " + sys.argv[0] + " -d dictionary-file -p postings-file -q file-of-queries -o output-file-of-results"
+
+
+
+
+#######################################################################
+# Main
+#######################################################################
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], 'd:p:q:o:')
@@ -265,6 +297,7 @@ postings_file = file(POSTING_DIR, 'r')
 # list of all docIDs
 master_postings = postings_file.readline()
 master_postings = json.loads(master_postings)
+
 search()
 
 out_file.close()
