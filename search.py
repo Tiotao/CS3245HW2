@@ -1,9 +1,12 @@
 from nltk.tokenize import word_tokenize, sent_tokenize
 from nltk.stem.porter import *
+from nltk.corpus import stopwords
 import re, getopt, json
 import cPickle as pickle
 from SkipList import SkipList
 from MyList import MyList
+
+import config
 
 #######################################################################
 # Read query - execute query - output result
@@ -282,6 +285,8 @@ def frequency(word):
 
 def lookup(word):
 	if type(word) is str:
+		if config.ELIMINATE_STOP_WORDS and is_stopword(word):
+			return MyList(master_postings)
 		if word in dictionary:
 			postings_file.seek(dictionary[word]['start'])
 			raw = postings_file.read(dictionary[word]['size'])
@@ -295,6 +300,10 @@ stemmer = PorterStemmer()
 # case folding, stemming
 def normalise_word(word):
 	return stemmer.stem(word.lower())
+
+stop = [normalise_word(i) for i in stopwords.words('english')]
+def is_stopword(word):
+	return word in stop
 
 def usage():
     print "usage: " + sys.argv[0] + " -d dictionary-file -p postings-file -q file-of-queries -o output-file-of-results"

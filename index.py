@@ -1,11 +1,13 @@
-
 from nltk.tokenize import word_tokenize, sent_tokenize
 from nltk.stem.porter import *
-from os import walk, remove
+from nltk.corpus import stopwords
+from os import walk
 import sys, json
 from SkipList import SkipList
 import cPickle as pickle
 import getopt
+
+import config
 
 
 # Sample command:
@@ -46,14 +48,8 @@ def generate_output(filenames, dict, dict_file, posting_file):
 	dict_content = ""
 	
 	posting_header = json.dumps(filenames) + '\n'
-
 	
-	# clear files
-
-	remove(posting_file)
-	remove(dict_file)
-	
-	posting_f = open(posting_file, 'ab')
+	posting_f = open(posting_file, 'wb')
 	posting_f.write(posting_header)
 	
 	for key in sorted_keys:
@@ -102,6 +98,8 @@ def generate_posting_array_dict(filenames):
 def generate_tokens(filename):
 	words = tokenize_sentences(filename)
 	tokens = stemming_words(words)
+	if config.ELIMINATE_STOP_WORDS:
+		tokens = filter_stopwords(tokens)
 	return tokens
 
 def tokenize_sentences(filename):
@@ -116,13 +114,16 @@ def tokenize_sentences(filename):
 		words = words + word_tokenize(s)
 	return words
 
+stemmer = PorterStemmer()
 def stemming_words(words):
-	stemmer = PorterStemmer()
 	tokens = []
 	for w in words:
 		tokens.append(stemmer.stem(w))
 	return tokens
 
+stop = stemming_words(stopwords.words('english'))
+def filter_stopwords(words):
+	return [i for i in words if i not in stop]
 
 def usage():
     print "usage: " + sys.argv[0] + " -i directory-of-documents -d dictionary-file -p postings-file"
