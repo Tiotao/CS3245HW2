@@ -1,6 +1,44 @@
 This is the README file for A0099314Y's and A0099332Y's submission
 
-== General Notes about this assignment ==
+== General notes about this assignment ==
+
+< explain your approach to indexing, and how are dict and postings written to disk>
+
+
+When it comes to searching, we do the following:
+
+First, read queries line by line and tokenize it.
+
+Then, we optimise the order of the terms AND chains to prioritise
+terms that results in shorter postings list. We do this by first
+locating all subqueries in parenthesis, identify the AND chains, and
+sort the operands based on estimated postings size. We then run the
+same algorithm on the entire query, ignoring subqueries in
+parenthesis.
+
+After the order of operands has been optimised, we convert the
+expression to reverse polish notation using shunting-yard algorithm.
+The benefit is that during evaluation, the order of operation is
+extremely simple as all parenthesis has been removed and we don't need
+to consider operator precedence. Another benefit is that using reverse
+polish notation, we can guarentee that we are keeping at most 2
+postlings list in memory at the same time.
+
+We then evaluate the RPN expressing, look up the postings list if we
+see a token, and process them using either intersect, union, or
+complement operation for AND, OR and NOT operator.
+
+== Files included with this submission ==
+.
+|-- ESSAY.txt        answer to essay question
+|-- MyList.py        wrapper class for skiplist and native list
+|-- README.txt       this file
+|-- SkipList.py      implements a skip list for postings file storage
+|-- config.py        configuration switches for testing
+|-- dictionary.txt   indexed dictionary  
+|-- index.py         python script for indexing 
+|-- postings.txt     indexed postings file
+`-- search.py        python script for searching
 
 
 == Statement of individual work ==

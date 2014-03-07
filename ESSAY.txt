@@ -44,10 +44,4 @@ However, notice that in our boolean retrieval, context plays no role. For a "we 
 
 This is not something that can be solved by simply keeping or removing stop words. 
 
-
-
-
-
-Therefore, removing stop words does not have a significant impact in our case.
-
 3. The NLTK tokenizer may not correctly tokenize all terms. What do you observe from the resulting terms produced by sent_tokenize() and word_tokenize()? Can you propose rules to further refine these results?
