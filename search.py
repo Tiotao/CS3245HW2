@@ -384,6 +384,8 @@ def lookup(word):
 	if type(word) is str:
 		if config.ELIMINATE_STOP_WORDS and is_stopword(word):
 			return MyList(master_postings)
+		elif config.ELIMINATE_NUMBERS and is_number(word):
+			return MyList(master_postings)
 		if word in dictionary:
 			postings_file.seek(dictionary[word]['start'])
 			raw = postings_file.read(dictionary[word]['size'])

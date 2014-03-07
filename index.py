@@ -165,8 +165,8 @@ def filter_stopwords(words):
 	return [i for i in words if i not in stop]
 
 def filter_numbers(words):
-	return [i for i in words if i.isdigit()]
-
+	numbers = '^[0-9\.\-,]+$'
+	return [i for i in words if not re.match(numbers, i)]
 
 #######################################################################
 # Main
