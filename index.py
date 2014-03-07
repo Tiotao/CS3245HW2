@@ -100,6 +100,8 @@ def generate_tokens(filename):
 	tokens = stemming_words(words)
 	if config.ELIMINATE_STOP_WORDS:
 		tokens = filter_stopwords(tokens)
+	if config.ELIMINATE_NUMBERS:
+		tokens = filter_numbers(tokens)
 	return tokens
 
 def tokenize_sentences(filename):
@@ -124,6 +126,10 @@ def stemming_words(words):
 stop = stemming_words(stopwords.words('english'))
 def filter_stopwords(words):
 	return [i for i in words if i not in stop]
+
+def filter_numbers(words):
+	numbers = '^[0-9\.\-,]+$'
+	return [i for i in words if not re.match(numbers, i)]
 
 def usage():
     print "usage: " + sys.argv[0] + " -i directory-of-documents -d dictionary-file -p postings-file"
