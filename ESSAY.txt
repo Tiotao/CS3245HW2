@@ -1,6 +1,12 @@
-1.You will observe that a large portion of the terms in the dictionary are numbers. However, we normally do not use numbers as query terms to search. Do you think it is a good idea to remove these number entries from the dictionary and the postings lists? Can you propose methods to normalize these numbers? How many percentage of reduction in disk storage do you observe after removing/normalizing these numbers?
+1.You will observe that a large portion of the terms in the dictionary
+are numbers. However, we normally do not use numbers as query terms to
+search. Do you think it is a good idea to remove these number entries
+from the dictionary and the postings lists? Can you propose methods to
+normalize these numbers? How many percentage of reduction in disk
+storage do you observe after removing/normalizing these numbers?
 
-Here are the comparisons before and after removing numbers from the postings list
+Here are the comparisons before and after removing numbers from the
+postings list
 
 Keeping numbers:
 
@@ -14,84 +20,130 @@ Eliminating numbers:
 
 * postings.txt    27M, down by 12.90%
 
-While removing numbers saved a significant amount of disk space, doing so will harm the ability to retrieve important results, such as: "born AND 1968", or "HTTP AND 404". Numbers such as year, code, phone numbers usually are not general terms that can be ignored from a query. Hence they cannot simply be removed.
+While removing numbers saved a significant amount of disk space, doing
+so will harm the ability to retrieve important results, such as: "born
+AND 1968", or "HTTP AND 404". Numbers such as year, code, phone
+numbers usually are not general terms that can be ignored from a
+query. Hence they cannot simply be removed.
 
-One strategy is to split the numbers into groups of fixed length. For example, 65166666 (NUS contact number), can be indexed as two words, 6516 and 6666. The exact length should be fine tuned based on the corpus or the common search pattern, but the idea is the same.
+One strategy is to split the numbers into groups of fixed length. For
+example, 65166666 (NUS contact number), can be indexed as two words,
+6516 and 6666. The exact length should be fine tuned based on the
+corpus or the common search pattern, but the idea is the same.
 
-2. What do you think will happen if we remove stop words from the dictionary and postings file? How does it affect the searching phase?
+2. What do you think will happen if we remove stop words from the
+dictionary and postings file? How does it affect the searching phase?
 
-If we remove the stop words from the dicitonary and postings file, it will signficantly shrink the sizes of these two files (since a large portion of the tokens has been ignored). 
+If we remove the stop words from the dicitonary and postings file, it
+will signficantly shrink the sizes of these two files (since a large
+portion of the tokens has been ignored).
 
-More precisely, eliminating stop words shrinks the size of postings file more. Eliminating one stop word saves one entry from the dictionary (which is basically the token, the frequency, and a pointer). However in postings file, each stop word is usually followed by a long list of docID - one of the reasons they are considered stop words in the first place since they are so common. Hence, eliminating stop words will save a larger percentage of the postings file than the dictionary.
+More precisely, eliminating stop words shrinks the size of postings
+file more. Eliminating one stop word saves one entry from the
+dictionary (which is basically the token, the frequency, and a
+pointer). However in postings file, each stop word is usually followed
+by a long list of docID - one of the reasons they are considered stop
+words in the first place since they are so common. Hence, eliminating
+stop words will save a larger percentage of the postings file than the
+dictionary.
 
 Keeping stop words:
 
 * dictionary.txt 934K
-
 * postings.txt    31M
 
 Eliminating stop words:
 
 * dictionary.txt 929K, down by  0.54%
-
 * postings.txt    26M, down by 16.13%
 
-When it comes to searching phase, there are two approaches. The naive approach is to return all docIDs when we see a stop word. This slows down the processing as we will have to union or intersect longer lists. The better approach is to remove the stop words from the expression (with proper processing to maintain the logic, for example computation AND NOT (me OR NOT algorithm) should become computation AND NOT (NOT algorithm)... ), this requires some quick processing time on the query itself, but the bottleneck of the searching, which is processing of postings, should be faster.
+When it comes to searching phase, there are two approaches. The naive
+approach is to return all docIDs when we see a stop word. This slows
+down the processing as we will have to union or intersect longer
+lists. The better approach is to remove the stop words from the
+expression (with proper processing to maintain the logic, for example
+computation AND NOT (me OR NOT algorithm) should become computation
+AND NOT (NOT algorithm)... ), this requires some quick processing time
+on the query itself, but the bottleneck of the searching, which is
+processing of postings, should be faster.
 
-However, completely removing stop words will likely results in more results being returned, since parts of the query will be ignored and hence the boolean expression is less restrictive.
+However, completely removing stop words will likely results in more
+results being returned, since parts of the query will be ignored and
+hence the boolean expression is less restrictive.
 
 Keeping stop words:
 
 * we AND are AND the AND champions     0
-
 * to AND be AND or AND not           475
-
 * NOT thisisnotreallyaword          7768
 
 
 Eliminating stop words:
 
 * we AND are AND the AND champions     7
-
 * to AND be AND or AND not          7768
-
 * NOT thisisnotreallyaword          7768
 
-However, notice that in our boolean retrieval, context plays no role. For a "we AND are AND the AND champions" query, what really matters is the word "champions" and not the other words. The users searching for "we are the champions" or "to be or not to be" are most likely more interested in the identical phrases. So though we do see more results when we eliminate the stop words, these are likely not what the user wishes to see anyway.
+However, notice that in our boolean retrieval, context plays no role.
+For a "we AND are AND the AND champions" query, what really matters is
+the word "champions" and not the other words. The users searching for
+"we are the champions" or "to be or not to be" are most likely more
+interested in the identical phrases. So though we do see more results
+when we eliminate the stop words, these are likely not what the user
+wishes to see anyway.
 
-This is not something that can be solved by simply keeping or removing stop words. 
+This is not something that can be solved by simply keeping or removing
+stop words.
 
-3. The NLTK tokenizer may not correctly tokenize all terms. What do you observe from the resulting terms produced by sent_tokenize() and word_tokenize()? Can you propose rules to further refine these results?
+3. The NLTK tokenizer may not correctly tokenize all terms. What do
+you observe from the resulting terms produced by sent_tokenize() and
+word_tokenize()? Can you propose rules to further refine these
+results?
 
-1) Punctuation
-word_tokenize() tends to include punctuations in some tokens if a word is next to any punctuations. It results to repeated tokens (word with and without punctuation are counted as two tokens)
+1) Punctuation word_tokenize() tends to include punctuations in some
+tokens if a word is next to any punctuations. It results to repeated
+tokens (word with and without punctuation are counted as two tokens)
 
 eg. in the dictionary file:
 
-deak 3 11958257 11958510
-deak' 2 11958510 11958713
+deak 3 11958257 11958510 deak' 2 11958510 11958713
 
-As punctuations does not really matter in tokenization. It is suggested to filter out punctuations in the process of tokenization.
+As punctuations does not really matter in tokenization. It is
+suggested to filter out punctuations in the process of tokenization.
 
 2) Hyphenation and 'January/February'
 
-word_tokenize() does not separate hyphenated words into two parts (eg. anti-government -> anti & government). This works fine in most of the cases but sometimes word_tokenize() can't tell if word combinations like 'January/February' is a word or two words.
+word_tokenize() does not separate hyphenated words into two parts (eg.
+anti-government -> anti & government). This works fine in most of the
+cases but sometimes word_tokenize() can't tell if word combinations
+like 'January/February' is a word or two words.
 
 eg. in the dictionary file:
 
 delfzyl/india 1 12168101 12168255
 
-One improvement may be to combine all the hyphenated words such as 'anti-government' into 'antigovernment' so that the tokenizer can effectively distinguish other word combinations with hyphenated words. 
+One improvement may be to combine all the hyphenated words such as
+'anti-government' into 'antigovernment' so that the tokenizer can
+effectively distinguish other word combinations with hyphenated words.
+To solve the 'January/February' case, we may use various information (
+such as vocabulary of the language) to decide if it makes more sense
+to split the word or combine them.
 
 3) End of Sentence
 
-sent_tokenize() works fine in most of the cases but sometimes it fails to identify the end of the sentence when there is acronyms in the sentence.
+sent_tokenize() works fine in most of the cases but sometimes it fails
+to identify the end of the sentence when there is acronyms in the
+sentence.
 
-eg. 
+eg.
 
-sent_tokenize("I don't like Cat Inc.. Cat Inc. gives me headache.")
+sent_tokenize("I don't like Cat Inc.. Cat Inc. gives me headache.") 
 >> ["I don't like Cat Inc.. Cat Inc. gives me headache."]
 
-expect output:
->> ["I don't like Cat Inc..", "Cat Inc. gives me headache."]
+expect output: 
+>> ["I don't like Cat Inc..", "Cat Inc. gives me
+headache."]
+
+It should have knowledge of acronyms to be able to better tokenize
+sentences.
 

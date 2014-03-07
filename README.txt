@@ -71,7 +71,7 @@ The benefit is that during evaluation, the order of operation is
 extremely simple as all parenthesis has been removed and we don't need
 to consider operator precedence. Another benefit is that using reverse
 polish notation, we can guarentee that we are keeping at most 2
-postlings list in memory at the same time.
+postings list in memory at the same time.
 
 We then evaluate the RPN expressing, look up the postings list if we
 see a token, and process them using either intersect, union, or
