@@ -1,0 +1,10 @@
+hello OR world
+january AND february OR march AND april OR may AND june AND july OR august
+(week OR day) AND (year OR month)
+NOT (NOT shareholders OR NOT futures OR NOT organization OR NOT cooperative AND Singapore)
+Growmark OR NOT Growmark
+bill OR Gates AND (vista OR XP) AND NOT mac
+Google OR Facebook AND NOT android
+money AND finance
+money OR finance
+(good OR fine) AND NOT book
