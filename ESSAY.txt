@@ -45,3 +45,36 @@ However, notice that in our boolean retrieval, context plays no role. For a "we 
 This is not something that can be solved by simply keeping or removing stop words. 
 
 3. The NLTK tokenizer may not correctly tokenize all terms. What do you observe from the resulting terms produced by sent_tokenize() and word_tokenize()? Can you propose rules to further refine these results?
+
+1) Punctuation
+word_tokenize() tends to include punctuations in some tokens if a word is next to any punctuations. It results to repeated tokens (word with and without punctuation are counted as two tokens)
+
+eg. in the dictionary file:
+
+deak 3 11958257 11958510
+deak' 2 11958510 11958713
+
+As punctuations does not really matter in tokenization. It is suggested to filter out punctuations in the process of tokenization.
+
+2) Hyphenation and 'January/February'
+
+word_tokenize() does not seperate hyphenated words into two parts (eg. anti-government -> anti & government). This works fine in most of the cases but sometimes word_tokenize() can't tell if word combinations like 'January/February' is a word or two words.
+
+eg. in the dictionary file:
+
+delfzyl/india 1 12168101 12168255
+
+One imporvement may be to combine all the hyphenated words such as 'anti-government' into 'antigovernment' so that the tokenizer can effectively distinguish other word conbinations with hyphenated words. 
+
+3) End of Sentence
+
+sent_tokenize() works fine in most of the cases but sometimes it fails to identify the end of the sentence when there is acronyms in the sentence.
+
+eg. 
+
+sent_tokenize("I don't like Cat Inc.. Cat Inc. gives me headache.")
+>> ["I don't like Cat Inc.. Cat Inc. gives me headache."]
+
+expect output:
+>> ["I don't like Cat Inc..", "Cat Inc. gives me headache."]
+
