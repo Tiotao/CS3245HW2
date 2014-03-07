@@ -1,5 +1,22 @@
 1.You will observe that a large portion of the terms in the dictionary are numbers. However, we normally do not use numbers as query terms to search. Do you think it is a good idea to remove these number entries from the dictionary and the postings lists? Can you propose methods to normalize these numbers? How many percentage of reduction in disk storage do you observe after removing/normalizing these numbers?
 
+Here are the comparisons before and after removing numbers from the postings list
+
+Keeping numbers:
+
+* dictionary.txt 934K
+
+* postings.txt    31M
+
+Eliminating numbers:
+
+* dictionary.txt 587K, down by 37.15%
+
+* postings.txt    27M, down by 12.90%
+
+While removing numbers saved a significant amount of disk space, doing so will harm the ability to retrieve important results, such as: "born AND 1968", or "HTTP AND 404". Numbers such as year, code, phone numbers usually are not general terms that can be ignored from a query. Hence they cannot simply be removed.
+
+One strategy is to split the numbers into groups of fixed length. For example, 65166666 (NUS contact number), can be indexed as two words, 6516 and 6666. The exact length should be fine tuned based on the corpus or the common search pattern, but the idea is the same.
 
 2. What do you think will happen if we remove stop words from the dictionary and postings file? How does it affect the searching phase?
 

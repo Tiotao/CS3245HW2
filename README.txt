@@ -28,6 +28,11 @@ We then evaluate the RPN expressing, look up the postings list if we
 see a token, and process them using either intersect, union, or
 complement operation for AND, OR and NOT operator.
 
+Notice that we have done some testing for the essay questions. There
+are some switches in config.py file, changing them will allow you to 
+test for different behaviours of the programme. Please refer to the 
+inline comments for details.
+
 == Files included with this submission ==
 .
 |-- ESSAY.txt        answer to essay question
