@@ -1,0 +1,53 @@
+1.You will observe that a large portion of the terms in the dictionary are numbers. However, we normally do not use numbers as query terms to search. Do you think it is a good idea to remove these number entries from the dictionary and the postings lists? Can you propose methods to normalize these numbers? How many percentage of reduction in disk storage do you observe after removing/normalizing these numbers?
+
+
+2. What do you think will happen if we remove stop words from the dictionary and postings file? How does it affect the searching phase?
+
+If we remove the stop words from the dicitonary and postings file, it will signficantly shrink the sizes of these two files (since a large portion of the tokens has been ignored). 
+
+More precisely, eliminating stop words shrinks the size of postings file more. Eliminating one stop word saves one entry from the dictionary (which is basically the token, the frequency, and a pointer). However in postings file, each stop word is usually followed by a long list of docID - one of the reasons they are considered stop words in the first place since they are so common. Hence, eliminating stop words will save a larger percentage of the postings file than the dictionary.
+
+Keeping stop words:
+
+* dictionary.txt 934K
+
+* postings.txt    31M
+
+Eliminating stop words:
+
+* dictionary.txt 929K, down by  0.54%
+
+* postings.txt    26M, down by 16.13%
+
+When it comes to searching phase, there are two approaches. The naive approach is to return all docIDs when we see a stop word. This slows down the processing as we will have to union or intersect longer lists. The better approach is to remove the stop words from the expression (with proper processing to maintain the logic, for example computation AND NOT (me OR NOT algorithm) should become computation AND NOT (NOT algorithm)... ), this requires some quick processing time on the query itself, but the bottleneck of the searching, which is processing of postings, should be faster.
+
+However, completely removing stop words will likely results in more results being returned, since parts of the query will be ignored and hence the boolean expression is less restrictive.
+
+Keeping stop words:
+
+* we AND are AND the AND champions     0
+
+* to AND be AND or AND not           475
+
+* NOT thisisnotreallyaword          7768
+
+
+Eliminating stop words:
+
+* we AND are AND the AND champions     7
+
+* to AND be AND or AND not          7768
+
+* NOT thisisnotreallyaword          7768
+
+However, notice that in our boolean retrieval, context plays no role. For a "we AND are AND the AND champions" query, what really matters is the word "champions" and not the other words. The users searching for "we are the champions" or "to be or not to be" are most likely more interested in the identical phrases. So though we do see more results when we eliminate the stop words, these are likely not what the user wishes to see anyway.
+
+This is not something that can be solved by simply keeping or removing stop words. 
+
+
+
+
+
+Therefore, removing stop words does not have a significant impact in our case.
+
+3. The NLTK tokenizer may not correctly tokenize all terms. What do you observe from the resulting terms produced by sent_tokenize() and word_tokenize()? Can you propose rules to further refine these results?
