@@ -1,4 +1,3 @@
-from nltk.tokenize import word_tokenize, sent_tokenize
 from nltk.stem.porter import *
 from nltk.corpus import stopwords
 import re, getopt, json
@@ -68,13 +67,15 @@ def parse_query(raw):
 	# split the words from operators
 	tokens = raw.split()
 	
+	find_and_optimise_parentheses_subquery(tokens)
+	find_and_optimise_AND_subquery(tokens)
+
 	return to_RPN(tokens)
 
 def to_RPN(tokens):
-
-	# convert to reverse polish notation
-	# with shunting-yard algorithm
-	
+	"""
+	convert to reverse polish notation with shunting-yard algorithm
+	"""
 	output = []
 	stack = []
 	for token in tokens:
@@ -119,7 +120,103 @@ def to_RPN(tokens):
 
 	return output
 
-# estimate the size of a query 
+
+#######################################################################
+# Optimisation
+# This part is not very well written, but since the bottleneck is
+# operation on large postings list, so some inefficient optimisation
+# should be compensated by faster postings processing
+#######################################################################
+
+
+def find_and_optimise_parentheses_subquery(query):
+	"""
+	Identify all parentheses in the query, and optimise the inner query
+	"""
+	start = -1
+	index = 0
+	parentheses = []
+	# locate all ( and )
+	# +1 since we want content excluding surrounding ( and )
+	left = [i+1 for i, x in enumerate(query) if x == '(']
+	right = [i for i, x in enumerate(query) if x == ')']
+
+	# for each subquery, optimise it
+	for start, end in zip(left, right):
+		find_and_optimise_AND_subquery(query[start:end])
+
+def find_and_optimise_AND_subquery(query):
+	"""
+	Identify chains of AND queries and sort operands in ascending
+	order of size of postings list.
+
+	Notice that for a chain of AND queries, such as
+	A AND B AND NOT C AND (X OR Y AND Z),
+	this method sees the following operands:
+	[A, B, NOT C, (X OR Y AND Z)]
+
+	Therefore we explicitly invoke this function inside 
+	find_and_optimise_parentheses_subquery
+	to deal with nested queries inside parentheses, then we invoke this 
+	function again on the entire query, so parentheses will be seen 
+	as one operand
+	"""
+	start = end = 0
+	index = 0
+	skip = False
+	while index < len(query):
+		token = query[index]
+		# treating (subquery) as one operand
+		if token == '(':
+			skip = True
+		elif token == ')':
+			skip = False
+		elif not skip and token == 'OR':
+			end = index
+			# only optimise if there are more than 2 operands
+			if (end - start) > 3:
+				query[start:end] = optimise_AND_subquery(query[start:end])
+			start = index + 1
+		else:
+			pass
+
+		index += 1
+
+	end = index
+	if (end - start > 3):
+		query[start:end] = optimise_AND_subquery(query[start:end]) 
+
+def optimise_AND_subquery(query):
+	"""
+	Sort a chain of ANDs by ascending order of size of postings list.
+	"""
+	operands = []
+	buff = []
+	skip = False
+	# break the query into list of operands, such as 
+	# A AND B AND NOT C AND (X OR Y AND Z),
+	# changed to
+	# [A, B, NOT C, (X OR Y AND Z)]
+	for token in query:
+		if token == '(':
+			buff.append(token)
+			skip = True		
+		elif token == ')':
+			buff.append(token)
+			skip = False
+		elif not skip and token == 'AND':
+			operands.append(buff)
+			buff = []
+		else:
+			buff.append(token)
+	operands.append(buff)
+
+	# sort the list of operands
+	optimised = sorted(operands, key=estimate_query)
+
+	# reconstruct the operands by flatten and intersperse it with 'AND'
+	return  intersperse(optimised, ['AND'])
+
 def estimate_query(query):
 	
 	query = to_RPN(query)
@@ -170,13 +267,13 @@ def evaluate(query):
 	Evaluate a given query written in RPN
 	"""
 	stack = []
-	print query
 	for token in query:
 		# if we see an operator, we take out the required operands from the stack
 		# evaluate the result, and push it back to the stack
 		if token in operators:
 			# not enough operands
 			if len(stack) < required_operands[token]:
+				print stack, token
 				raise Exception("insufficient operands")
 			else:
 				operands = []
@@ -275,11 +372,11 @@ def union(operands):
 #######################################################################
 
 # return the size of the postings for a given token
-def frequency(word):
+def freq(word):
 	if type(word) is int:
 		return word
 	elif word in dictionary:
-		return dictionarry[word]['freq']
+		return dictionary[word]['freq']
 	else:
 		return 0
 
@@ -296,6 +393,18 @@ def lookup(word):
 	else:
 		return word
 
+# http://stackoverflow.com/a/5656097/1903464
+def joinit(iterable, delimiter):
+    it = iter(iterable)
+    yield next(it)
+    for x in it:
+        yield delimiter
+        yield x
+
+def intersperse(iterable, delimiter):
+	lst =  list(joinit(iterable, delimiter))
+	return [item for sublist in lst for item in sublist]
+
 stemmer = PorterStemmer()
 # case folding, stemming
 def normalise_word(word):
@@ -307,9 +416,6 @@ def is_stopword(word):
 
 def usage():
     print "usage: " + sys.argv[0] + " -d dictionary-file -p postings-file -q file-of-queries -o output-file-of-results"
-
-
-
 
 #######################################################################
 # Main

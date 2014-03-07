@@ -24,4 +24,7 @@ printed) from the discussions.
 Appreciation towards the classmates on IVLE forum that helped each other
 to check the correctness of the output.
 
-Shunting-yard algorithm: https://igor.io/2013/12/03/stack-machines-shunting-yard.html
+Shunting-yard algorithm
+ - https://igor.io/2013/12/03/stack-machines-shunting-yard.html
+python: most elegant way to intersperse a list with an element 
+ - http://stackoverflow.com/a/5656097/1903464
