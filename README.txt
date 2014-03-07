@@ -16,8 +16,8 @@ following:
 		'banana' : [2, 4, 7]
 	}
 
-This implementation makes sure that there is no repeataion of tokens
-stored in the dicitionary. It also allows us to sort the filename array
+This implementation makes sure that there is no repetition of tokens
+stored in the dictionary. It also allows us to sort the filename array
 into sorted posting array.
 
 In order to have skips in the postings list, we build a SkipList class.
@@ -30,7 +30,7 @@ as well as data (in this case, filename).
 
 Once a SkipList is build from an postings array, by 
 SkipList.build_skips(), we can get a SkipList instance with skip 
-pointers. ( follow the sqrt rule)
+pointers. (follow the sqrt rule)
 
 After getting a dictionary of tokens and postings arrays. Building 
 skiplist based on positing array. Write the skiplist into postings.txt 
@@ -40,6 +40,7 @@ information is used as pointers in dictionary file.
 
 The first line of posting.txt is reserved for a json of filename for 
 search optimization.
+
 
 Examples:
 
